@@ -15,7 +15,7 @@ import Icon9 from '../../assets/Menu/9.svg';
 import LockIcon from '../../assets/Menu/10.svg';
 import ArrowIcon from '../../assets/Menu/Arrow2.svg';
 import SlipIcon from '../../assets/Menu/Slip.svg';
-import ExitIcon from '../../assets/Menu/exit.svg';
+import ExitIcon from '../../assets/Menu/Exit.svg';
 
 interface MenuItem {
   path: string;
