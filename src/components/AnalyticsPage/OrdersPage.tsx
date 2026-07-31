@@ -1,4 +1,4 @@
-// OrdersPage.tsx — ПОЛНЫЙ ФАЙЛ
+// OrdersPage.tsx — ПОЛНЫЙ ФАЙЛ (исправлен crypto.randomUUID)
 import React, { useRef, useState, useEffect } from 'react';
 import { Client } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
@@ -18,6 +18,15 @@ import Icon9 from '../../assets/References/Icon9.svg';
 import Icon10 from '../../assets/References/Icon10.svg';
 import Icon20 from '../../assets/References/Icon20.svg';
 import Popup1 from '../../assets/References/popup1.svg';
+
+// Полифилл для crypto.randomUUID
+const generateUUID = (): string => {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    const r = Math.random() * 16 | 0;
+    const v = c === 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+};
 
 interface OrderItem {
   order_uid: string;
@@ -210,7 +219,7 @@ const OrdersPage = () => {
   };
 
   const handleCreateClick = async () => {
-    const newUid = crypto.randomUUID();
+    const newUid = generateUUID();
     openTab(`/orders/create/${newUid}`, 'Заказ (новый)', null);
   };
 
@@ -238,23 +247,13 @@ const OrdersPage = () => {
     const reason = item.statusreason;
     const track = item.statustrack;
     
-    // Черновик
     if (reason === 'draft') return 'Черновик';
-    // Отменён заказчиком
     if (reason === 'cancelcustomer') return 'Отменён заказчиком';
-    // Отменён поставщиком
     if (reason === 'cancelprovider') return 'Отменён поставщиком';
-    // Завершён
     if (reason === 'done') return 'Завершён';
-    
-    // Трек вручен — завершён
     if (track === 'done') return 'Завершён';
-    
-    // Этапы до ТКП
     if (reason === 'inprocessing') return 'В обработке';
     if (reason === 'inworkprovider') return 'В работе';
-    
-    // Если есть трек — показываем этап трека
     if (track === 'notinwork') return 'В реализации';
     if (track === 'inwork') return 'Принят в работу';
     if (track === 'intransitoutside') return 'Транзит за пределами РФ';
@@ -264,8 +263,6 @@ const OrdersPage = () => {
     if (track === 'sorting') return 'Сортировка';
     if (track === 'sent') return 'Отправлен получателю';
     if (track === 'courier') return 'У курьера';
-    
-    // ТКП направлено (если нет трека)
     if (reason === 'posttkpprovider') return 'ТКП направлено';
     
     return reason || track || '—';
