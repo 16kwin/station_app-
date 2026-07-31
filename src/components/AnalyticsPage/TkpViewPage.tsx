@@ -1,4 +1,4 @@
-// TkpViewPage.tsx — ПОЛНЫЙ ФАЙЛ (AWMS) с WebSocket и обновлёнными кнопками
+// TkpViewPage.tsx — ПОЛНЫЙ ФАЙЛ (AWMS) с WebSocket (исправлен localhost)
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTabs } from '../../context/TabContext';
@@ -98,7 +98,7 @@ const TkpViewPage = () => {
     const timer = setTimeout(() => {
       if (!active) return;
       const client = new Client({
-        webSocketFactory: () => new SockJS('http://localhost:8084/ws-stations'),
+        webSocketFactory: () => new SockJS('http://45.146.164.123:8084/ws-stations'),
         onConnect: () => {
           if (!active) { client.deactivate(); return; }
           client.subscribe('/topic/tkp/status', () => {

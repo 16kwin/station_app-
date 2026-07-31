@@ -1,4 +1,4 @@
-// TkpPage.tsx (AWMS) — журнал ТКП с WebSocket на порту 8084
+// TkpPage.tsx (AWMS) — журнал ТКП с WebSocket (исправлен localhost)
 import React, { useRef, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Client } from '@stomp/stompjs';
@@ -176,7 +176,7 @@ const TkpPage = () => {
     const timer = setTimeout(() => {
       if (!active) return;
       const client = new Client({
-        webSocketFactory: () => new SockJS('http://localhost:8084/ws-stations'),
+        webSocketFactory: () => new SockJS('http://45.146.164.123:8084/ws-stations'),
         onConnect: () => {
           if (!active) { client.deactivate(); return; }
           const refresh = () => {

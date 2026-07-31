@@ -35,6 +35,15 @@ import TrackCurrentIcon from '../../assets/References/OrderCreate/TrackCurrentIc
 import TrackFutureIcon from '../../assets/References/OrderCreate/TrackFutureIcon.svg';
 import OtmenaIcon from '../../assets/References/OrderCreate/Otmena.svg';
 
+// Полифилл для crypto.randomUUID
+const generateUUID = (): string => {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    const r = Math.random() * 16 | 0;
+    const v = c === 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+};
+
 interface OrderProduct {
   localId: string;
   productUid: string;
@@ -178,7 +187,7 @@ const OrderCreatePage = () => {
       if (!active) return;
       
       const client = new Client({
-        webSocketFactory: () => new SockJS('http://localhost:8084/ws-stations'),
+        webSocketFactory: () => new SockJS('http://45.146.164.123:8084/ws-stations'),
         onConnect: () => {
           if (!active) {
             client.deactivate();
@@ -408,7 +417,7 @@ const OrderCreatePage = () => {
     if (!uid || products.length === 0 || !issuedBy.trim()) return;
     setIsSending(true);
     try {
-      const generatedUid = crypto.randomUUID(); 
+      const generatedUid = generateUUID(); 
       const generatedNumber = `ORD-${Date.now()}`;
       await AxiosService.post(ConstantInfo.restApiOrderConduct(generatedUid), { orderUid: generatedUid, orderNumber: generatedNumber, orderDate, formedBy, issuedBy, products: products.map(p => ({ productUid: p.productUid, quantity: p.quantity })) });
       
