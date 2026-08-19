@@ -1,4 +1,4 @@
-// OrderCreatePage.tsx — ПОЛНЫЙ ФАЙЛ (AWMS) с поддержкой base64 изображений и исправленной логикой отмены
+// OrderCreatePage.tsx — ПОЛНЫЙ ФАЙЛ (AWMS) без UID в детализации
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTabs } from '../../context/TabContext';
@@ -35,7 +35,6 @@ import TrackCurrentIcon from '../../assets/References/OrderCreate/TrackCurrentIc
 import TrackFutureIcon from '../../assets/References/OrderCreate/TrackFutureIcon.svg';
 import OtmenaIcon from '../../assets/References/OrderCreate/Otmena.svg';
 
-// Полифилл для crypto.randomUUID
 const generateUUID = (): string => {
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
     const r = Math.random() * 16 | 0;
@@ -285,7 +284,7 @@ const OrderCreatePage = () => {
         }
         else { setIsConducted(true); setCanSend(false); setCanCancel(false); }
 
-        checkTkpExists(orderUid);
+        await checkTkpExists(orderUid);
       }
     } catch (e) { console.error('Ошибка загрузки заказа:', e); }
     finally { setIsLoading(false); }
@@ -299,7 +298,15 @@ const OrderCreatePage = () => {
       ]);
       const allTkp = [...(activeRes.data || []), ...(closedRes.data || [])];
       const tkp = allTkp.find((t: any) => t.order_uid === orderUid);
-      if (tkp) { setHasTkp(true); setTkpUid(tkp.tkp_uid); setTkpStatusInvoice(tkp.statusinvoice || ''); }
+      if (tkp) { 
+        setHasTkp(true); 
+        setTkpUid(tkp.tkp_uid); 
+        setTkpStatusInvoice(tkp.statusinvoice || ''); 
+      } else {
+        setHasTkp(false);
+        setTkpUid(null);
+        setTkpStatusInvoice('');
+      }
     } catch (e) {}
   };
 
@@ -520,7 +527,7 @@ const OrderCreatePage = () => {
   const isDeliveryAvailable = (effectiveStatusReason === 'posttkpprovider' || currentOrderStage === 'tkp_accepted' || currentOrderStage === 'inrealise' || currentOrderStage === 'done') && !isCancelled;
   
   const currentStageIndex = ORDER_TRACK_STAGES.findIndex(s => s.key === currentOrderStage);
-  const effectiveIndex = currentOrderStage === 'posttkpprovider' ? currentStageIndex + 1 : currentStageIndex;
+  const effectiveIndex = currentStageIndex;
   const deliveryStageIndex = DELIVERY_TRACK_STAGES.findIndex(s => s.key === orderTrackStatus);
   const lastOrderIndex = ORDER_TRACK_STAGES.length - 1;
   const lastDeliveryIndex = DELIVERY_TRACK_STAGES.length - 1;
@@ -830,7 +837,6 @@ const OrderCreatePage = () => {
               <div key={product.product_uid || idx} style={{ marginBottom: idx < detailProducts.length - 1 ? 40 : 0 }}>
                 <h3 style={{ fontFamily: 'Inter, sans-serif', fontSize: 17, fontWeight: 700, color: '#666EFE', marginBottom: 16 }}>Позиция {idx + 1}: {product.product || '—'}</h3>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 16 }}>
-                  <div style={{ display: 'flex', gap: 10 }}><span style={labelStyle}>UID:</span><span style={valueStyle}>{product.product_uid || '—'}</span></div>
                   <div style={{ display: 'flex', gap: 10 }}><span style={labelStyle}>Артикул:</span><span style={valueStyle}>{product.article || '—'}</span></div>
                   <div style={{ display: 'flex', gap: 10 }}><span style={labelStyle}>Количество:</span><span style={valueStyle}>{product.quantity}</span></div>
                   {product.group && <div style={{ display: 'flex', gap: 10 }}><span style={labelStyle}>Группа:</span><span style={valueStyle}>{product.group}</span></div>}
@@ -846,7 +852,7 @@ const OrderCreatePage = () => {
                 {product.sku && <div style={{ marginBottom: 16 }}><div style={sectionTitleStyle}>SKU</div><div style={{ display: 'flex', gap: 10 }}><span style={labelStyle}>Код:</span><span style={valueStyle}>{product.sku.code || '—'}</span></div>{product.sku.image && <img src={getImageSrc(product.sku.image)} alt="SKU" style={{ maxWidth: 150, marginTop: 8, borderRadius: 8, border: '1px solid rgba(102,110,254,0.15)' }} />}</div>}
                 {product.images && product.images.length > 0 && <div style={{ marginBottom: 16 }}><div style={sectionTitleStyle}>Изображения</div><div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>{product.images.map((img, i) => <img key={i} src={getImageSrc(img)} alt="" style={{ width: 150, height: 150, objectFit: 'contain', borderRadius: 8, border: '1px solid rgba(102,110,254,0.15)' }} />)}</div></div>}
                 {product.draws && product.draws.length > 0 && <div style={{ marginBottom: 16 }}><div style={sectionTitleStyle}>Чертежи</div><div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>{product.draws.map((draw, i) => <img key={i} src={getImageSrc(draw)} alt="" style={{ width: 200, height: 150, objectFit: 'contain', borderRadius: 8, border: '1px solid rgba(102,110,254,0.15)' }} />)}</div></div>}
-                {product.analogues && product.analogues.length > 0 && <div style={{ marginBottom: 16 }}><div style={sectionTitleStyle}>Аналоги</div>{product.analogues.map((analog, i) => <div key={i} style={{ display: 'flex', gap: 20, padding: '6px 0' }}><span style={valueStyle}>{analog.name}</span><span style={{ ...valueStyle, color: '#6B7280' }}>{analog.model}</span><span style={{ ...valueStyle, color: '#9CA3AF', fontSize: 12 }}>UID: {analog.uid}</span></div>)}</div>}
+                {product.analogues && product.analogues.length > 0 && <div style={{ marginBottom: 16 }}><div style={sectionTitleStyle}>Аналоги</div>{product.analogues.map((analog, i) => <div key={i} style={{ display: 'flex', gap: 20, padding: '6px 0' }}><span style={valueStyle}>{analog.name}</span><span style={{ ...valueStyle, color: '#6B7280' }}>{analog.model}</span></div>)}</div>}
               </div>
             ))}
           </div>

@@ -1,4 +1,4 @@
-// OrdersPage.tsx — ПОЛНЫЙ ФАЙЛ (исправлен crypto.randomUUID)
+// OrdersPage.tsx — ПОЛНЫЙ ФАЙЛ (номер вместо UID, колонки перераспределены)
 import React, { useRef, useState, useEffect } from 'react';
 import { Client } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
@@ -19,7 +19,6 @@ import Icon10 from '../../assets/References/Icon10.svg';
 import Icon20 from '../../assets/References/Icon20.svg';
 import Popup1 from '../../assets/References/popup1.svg';
 
-// Полифилл для crypto.randomUUID
 const generateUUID = (): string => {
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
     const r = Math.random() * 16 | 0;
@@ -79,13 +78,12 @@ const OrdersPage = () => {
   const VISIBLE_ROWS = 10;
 
   const COL_ICON = 30;
-  const COL_UID = 62;
-  const COL_CUSTOMER = 482;
-  const COL_SOURCE = 682;
-  const COL_NUMBER = 913;
-  const COL_DATE = 1139;
-  const COL_STATUS = 1339;
-  const COL_STATE = 1495;
+  const COL_NUMBER = 62;
+  const COL_CUSTOMER = 282;
+  const COL_SOURCE = 582;
+  const COL_DATE = 882;
+  const COL_STATUS = 1182;
+  const COL_STATE = 1482;
 
   useEffect(() => {
     tabIdRef.current = activeTabId;
@@ -155,7 +153,7 @@ const OrdersPage = () => {
       if (!active) return;
       
       client = new Client({
-        webSocketFactory: () => new SockJS('http://localhost:8084/ws-stations'),
+        webSocketFactory: () => new SockJS('http://45.146.164.123:8084/ws-stations'),
         onConnect: () => {
           if (!active) {
             client?.deactivate();
@@ -450,10 +448,9 @@ const OrdersPage = () => {
       <div style={{ position: 'absolute', top: 162, left: 40 }}>
         <div style={{ width: TABLE_WIDTH, height: TABLE_HEIGHT, backgroundColor: '#F5F6FA', borderRadius: 10, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
           <div style={{ height: HEADER_HEIGHT, minHeight: HEADER_HEIGHT, backgroundColor: '#666EFE', borderTopLeftRadius: 8, borderTopRightRadius: 8, display: 'flex', alignItems: 'center', position: 'relative', paddingRight: 40, boxSizing: 'border-box' }}>
-            <span style={{ fontFamily: 'Inter, sans-serif', fontSize: 15, fontWeight: 600, color: '#FFFFFF', position: 'absolute', left: COL_UID }}>UID ЗАКАЗА</span>
+            <span style={{ fontFamily: 'Inter, sans-serif', fontSize: 15, fontWeight: 600, color: '#FFFFFF', position: 'absolute', left: COL_NUMBER }}>НОМЕР</span>
             <span style={{ fontFamily: 'Inter, sans-serif', fontSize: 15, fontWeight: 600, color: '#FFFFFF', position: 'absolute', left: COL_CUSTOMER }}>ПОСТАВЩИК</span>
             <span style={{ fontFamily: 'Inter, sans-serif', fontSize: 15, fontWeight: 600, color: '#FFFFFF', position: 'absolute', left: COL_SOURCE }}>ИСТОЧНИК ЗАКАЗА</span>
-            <span style={{ fontFamily: 'Inter, sans-serif', fontSize: 15, fontWeight: 600, color: '#FFFFFF', position: 'absolute', left: COL_NUMBER }}>НОМЕР</span>
             <span style={{ fontFamily: 'Inter, sans-serif', fontSize: 15, fontWeight: 600, color: '#FFFFFF', position: 'absolute', left: COL_DATE }}>ДАТА-ВРЕМЯ</span>
             <span style={{ fontFamily: 'Inter, sans-serif', fontSize: 15, fontWeight: 600, color: '#FFFFFF', position: 'absolute', left: COL_STATUS }}>СТАТУС</span>
             <span style={{ fontFamily: 'Inter, sans-serif', fontSize: 15, fontWeight: 600, color: '#FFFFFF', position: 'absolute', left: COL_STATE }}>СОСТОЯНИЕ ЗАКАЗА</span>
@@ -464,10 +461,9 @@ const OrdersPage = () => {
                 const isSelected = selectedIds.has(item.order_uid);
                 const isFirst = idx === 0;
                 const isLast = idx === orders.length - 1;
-                const uidText = item.order_uid || '—';
-                const customerText = item.customer_id || '—';
-                const sourceText = 'AWMS:Динамика';
                 const numberText = item.order_number || '—';
+                const customerText = 'ЗАДЕЛ';
+                const sourceText = 'AWMS:Динамика';
                 const dateText = formatDateTime(item.order_datetime);
                 const statusText = getStatusLabel(item.status);
                 const statusColor = getStatusColor(item.status);
@@ -491,21 +487,16 @@ const OrdersPage = () => {
                   >
                     <img src={Popup1} alt="" style={{ position: 'absolute', left: COL_ICON, width: 20, height: 22 }} />
                     <span
-                      onMouseEnter={(e) => handleCellMouseEnter(e, uidText)}
+                      onMouseEnter={(e) => handleCellMouseEnter(e, numberText)}
                       onMouseLeave={handleCellMouseLeave}
-                      style={{ fontFamily: 'Inter, sans-serif', fontSize: 15, fontWeight: 400, color: '#2D4059', position: 'absolute', left: COL_UID, maxWidth: 360, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
-                    >{uidText}</span>
+                      style={{ fontFamily: 'Inter, sans-serif', fontSize: 15, fontWeight: 400, color: '#2D4059', position: 'absolute', left: COL_NUMBER, maxWidth: COL_CUSTOMER - COL_NUMBER - 20, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+                    >{numberText}</span>
                     <span
                       onMouseEnter={(e) => handleCellMouseEnter(e, customerText)}
                       onMouseLeave={handleCellMouseLeave}
                       style={{ fontFamily: 'Inter, sans-serif', fontSize: 15, fontWeight: 400, color: '#2D4059', position: 'absolute', left: COL_CUSTOMER, maxWidth: COL_SOURCE - COL_CUSTOMER - 20, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
                     >{customerText}</span>
-                    <span style={{ fontFamily: 'Inter, sans-serif', fontSize: 15, fontWeight: 400, color: '#2D4059', position: 'absolute', left: COL_SOURCE, maxWidth: COL_NUMBER - COL_SOURCE - 20, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{sourceText}</span>
-                    <span
-                      onMouseEnter={(e) => handleCellMouseEnter(e, numberText)}
-                      onMouseLeave={handleCellMouseLeave}
-                      style={{ fontFamily: 'Inter, sans-serif', fontSize: 15, fontWeight: 400, color: '#2D4059', position: 'absolute', left: COL_NUMBER, maxWidth: COL_DATE - COL_NUMBER - 20, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
-                    >{numberText}</span>
+                    <span style={{ fontFamily: 'Inter, sans-serif', fontSize: 15, fontWeight: 400, color: '#2D4059', position: 'absolute', left: COL_SOURCE, maxWidth: COL_DATE - COL_SOURCE - 20, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{sourceText}</span>
                     <span style={{ fontFamily: 'Inter, sans-serif', fontSize: 15, fontWeight: 400, color: '#2D4059', position: 'absolute', left: COL_DATE }}>{dateText}</span>
                     <span style={{ fontFamily: 'Inter, sans-serif', fontSize: 15, fontWeight: 400, color: statusColor, position: 'absolute', left: COL_STATUS }}>{statusText}</span>
                     <span

@@ -1,6 +1,24 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Запрет выделения текста на всём экране */
+* {
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+}
+
+/* Разрешаем выделение только в инпутах и текстовых областях */
+input,
+textarea {
+  user-select: text;
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+}
+
 /* Статичные скроллбары */
 ::-webkit-scrollbar {
   width: 10px;

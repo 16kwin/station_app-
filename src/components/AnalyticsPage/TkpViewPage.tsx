@@ -1,4 +1,4 @@
-// TkpViewPage.tsx — ПОЛНЫЙ ФАЙЛ (AWMS) с WebSocket (исправлен localhost)
+// TkpViewPage.tsx — ПОЛНЫЙ ФАЙЛ (AWMS) с подпиской на /topic/tkp/paid и форматированием даты
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTabs } from '../../context/TabContext';
@@ -62,6 +62,19 @@ const TABLE_WIDTH = 1720;
 const TABLE_HEIGHT = 324;
 const VISIBLE_ROWS = 5;
 
+const formatDate = (dateStr?: string): string => {
+  if (!dateStr) return '—';
+  try {
+    const d = new Date(dateStr);
+    const dd = String(d.getDate()).padStart(2, '0');
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const yyyy = d.getFullYear();
+    return `${dd}.${mm}.${yyyy}`;
+  } catch {
+    return dateStr;
+  }
+};
+
 const TkpViewPage = () => {
   const { uid } = useParams<{ uid: string }>();
   const navigate = useNavigate();
@@ -102,6 +115,9 @@ const TkpViewPage = () => {
         onConnect: () => {
           if (!active) { client.deactivate(); return; }
           client.subscribe('/topic/tkp/status', () => {
+            if (uid) loadTkpData(uid);
+          });
+          client.subscribe('/topic/tkp/paid', () => {
             if (uid) loadTkpData(uid);
           });
         },
@@ -224,19 +240,6 @@ const TkpViewPage = () => {
     setTooltip(null);
   };
 
-  const formatDeliveryDate = (dateStr?: string) => {
-    if (!dateStr) return '—';
-    try {
-      const d = new Date(dateStr);
-      const dd = String(d.getDate()).padStart(2, '0');
-      const mm = String(d.getMonth() + 1).padStart(2, '0');
-      const yyyy = d.getFullYear();
-      return `${dd}.${mm}.${yyyy}`;
-    } catch {
-      return dateStr;
-    }
-  };
-
   const formatCost = (value: number): string => {
     return value.toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ₽';
   };
@@ -342,9 +345,8 @@ const TkpViewPage = () => {
       </h1>
 
       {tkpData.order_uid && (
-        <button onClick={handleOpenOrder} style={{ position: 'absolute', top: 32, right: 132, width: 200, height: 40, borderRadius: 10, backgroundColor: '#FFFFFF', border: '1px solid rgba(102, 110, 254, 0.15)', cursor: 'pointer', display: 'flex', alignItems: 'center', padding: 0 }}>
-          <img src={TkpIcon} alt="Заказ" style={{ width: 18, height: 20, marginLeft: 15 }} />
-          <span style={{ fontFamily: 'Inter, sans-serif', fontSize: 15, fontWeight: 600, color: '#2D4059', marginLeft: 15 }}>Заказ на поставку</span>
+        <button onClick={handleOpenOrder} style={{ position: 'absolute', top: 32, right: 132, height: 40, paddingLeft: 15, paddingRight: 15, borderRadius: 10, backgroundColor: '#FFFFFF', border: '1px solid rgba(102, 110, 254, 0.15)', cursor: 'pointer', display: 'flex', alignItems: 'center', padding: 0 }}>
+          <span style={{ fontFamily: 'Inter, sans-serif', fontSize: 15, fontWeight: 600, color: '#2D4059', padding: '0 15px' }}>Заказ на поставку</span>
         </button>
       )}
 
@@ -362,7 +364,7 @@ const TkpViewPage = () => {
           <div style={{ position: 'absolute', top: 165, left: 40, width: TABLE_WIDTH, height: 137, backgroundColor: '#FFFFFF', borderRadius: 10, border: '1px solid rgba(102, 110, 254, 0.15)' }}>
             <div style={{ position: 'absolute', top: 35, left: 30, display: 'flex', gap: 60 }}>
               <div style={{ pointerEvents: 'none' }}><FormField width={FIELD_WIDTH} height={FIELD_HEIGHT} label="Номер:" icon={Icon11} iconActive={Icon12} value={tkpData.tkp_number || uid} placeholder="Номер ТКП" type="input" onChange={() => {}} selectIconWidth={20} selectIconHeight={14} /></div>
-              <div style={{ pointerEvents: 'none' }}><FormField width={FIELD_WIDTH} height={FIELD_HEIGHT} label="Дата:" icon={IconN31} iconActive={IconN31} value={tkpData.tkp_data || tkpData.orderdata || '—'} placeholder="Дата" type="input" onChange={() => {}} selectIconWidth={18} selectIconHeight={18} /></div>
+              <div style={{ pointerEvents: 'none' }}><FormField width={FIELD_WIDTH} height={FIELD_HEIGHT} label="Дата:" icon={IconN31} iconActive={IconN31} value={formatDate(tkpData.tkp_data || tkpData.orderdata)} placeholder="Дата" type="input" onChange={() => {}} selectIconWidth={18} selectIconHeight={18} /></div>
               <div style={{ pointerEvents: 'none' }}><FormField width={FIELD_WIDTH} height={FIELD_HEIGHT} label="Получено через:" icon={IconN41} iconActive={IconN42} value="Динамика SAAS" placeholder="" type="input" onChange={() => {}} selectIconWidth={18} selectIconHeight={18} /></div>
               <div style={{ pointerEvents: 'none' }}><FormField width={FIELD_WIDTH} height={FIELD_HEIGHT} label="Поставщик:" icon={IconN51} iconActive={IconN52} value="Zadel" placeholder="Поставщик" type="input" onChange={() => {}} selectIconWidth={20} selectIconHeight={20} /></div>
             </div>
@@ -382,7 +384,7 @@ const TkpViewPage = () => {
               marginLeft: 55,
               whiteSpace: 'nowrap',
             }}>
-              Общий срок поставки (от заказа до фактической поставки): {formatDeliveryDate(deliveryDate)}
+              Общий срок поставки (от заказа до фактической поставки): {formatDate(deliveryDate)}
             </span>
             <div style={{ marginLeft: 'auto', display: 'flex', gap: 15 }}>
               <button style={mutedButtonStyle}><img src={IconBtn1} alt="" style={{ width: 18, height: 18 }} /></button>
@@ -399,8 +401,8 @@ const TkpViewPage = () => {
                 <span style={{ fontFamily: 'Inter, sans-serif', fontSize: 14, fontWeight: 600, color: '#FFFFFF', position: 'absolute', left: COL_NUMBER }}>НОМЕР</span>
                 <span style={{ fontFamily: 'Inter, sans-serif', fontSize: 14, fontWeight: 600, color: '#FFFFFF', position: 'absolute', left: COL_NAME_ZADEL }}>НАИМЕНОВАНИЕ (ZADEL)</span>
                 <span style={{ fontFamily: 'Inter, sans-serif', fontSize: 14, fontWeight: 600, color: '#FFFFFF', position: 'absolute', left: COL_ARTICLE_ZADEL }}>АРТИКУЛ (ZADEL)</span>
-                <span style={{ fontFamily: 'Inter, sans-serif', fontSize: 14, fontWeight: 600, color: '#FFFFFF', position: 'absolute', left: COL_NAME_BUYER }}>НАИМЕНОВАНИЕ ПОКУПАТЕЛЯ</span>
-                <span style={{ fontFamily: 'Inter, sans-serif', fontSize: 14, fontWeight: 600, color: '#FFFFFF', position: 'absolute', left: COL_ARTICLE_BUYER }}>АРТИКУЛ ПОКУПАТЕЛЯ</span>
+                <span style={{ fontFamily: 'Inter, sans-serif', fontSize: 14, fontWeight: 600, color: '#FFFFFF', position: 'absolute', left: COL_NAME_BUYER }}>НАИМЕНОВАНИЕ (AWMS)</span>
+                <span style={{ fontFamily: 'Inter, sans-serif', fontSize: 14, fontWeight: 600, color: '#FFFFFF', position: 'absolute', left: COL_ARTICLE_BUYER }}>АРТИКУЛ (AWMS)</span>
                 <span style={{ fontFamily: 'Inter, sans-serif', fontSize: 14, fontWeight: 600, color: '#FFFFFF', position: 'absolute', left: COL_QUANTITY }}>КОЛИЧЕСТВО</span>
                 <span style={{ fontFamily: 'Inter, sans-serif', fontSize: 14, fontWeight: 600, color: '#FFFFFF', position: 'absolute', left: COL_PRICE }}>ЦЕНА</span>
                 <span style={{ fontFamily: 'Inter, sans-serif', fontSize: 14, fontWeight: 600, color: '#FFFFFF', position: 'absolute', left: COL_COST }}>СТОИМОСТЬ</span>
@@ -471,8 +473,7 @@ const TkpViewPage = () => {
                 <div key={product.product_uid || idx} style={{ marginBottom: idx < products.length - 1 ? 40 : 0 }}>
                   <h3 style={{ fontFamily: 'Inter, sans-serif', fontSize: 17, fontWeight: 700, color: '#666EFE', marginBottom: 16 }}>Позиция {idx + 1}: {product.product || '—'}</h3>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 16 }}>
-                    <div style={{ display: 'flex', gap: 10 }}><span style={labelStyle}>UID (Zadel):</span><span style={{ ...valueStyle, color: '#2D4059' }}>{product.zadel_product_uid || '—'}</span></div>
-                    <div style={{ display: 'flex', gap: 10 }}><span style={labelStyle}>UID (AWMS):</span><span onClick={() => handleOpenBuyerMaterial(product.product_uid)} style={{ ...valueStyle, color: '#666EFE', cursor: 'pointer', textDecoration: 'underline' }}>{product.product_uid || '—'}</span></div>
+                    <div style={{ display: 'flex', gap: 10 }}><span style={labelStyle}>Наименование (AWMS):</span><span onClick={() => handleOpenBuyerMaterial(product.product_uid)} style={{ ...valueStyle, color: '#666EFE', cursor: 'pointer', textDecoration: 'underline' }}>{buyerInfoCache[product.product_uid]?.product || '—'}</span></div>
                     <div style={{ display: 'flex', gap: 10 }}><span style={labelStyle}>Артикул:</span><span style={valueStyle}>{product.article || '—'}</span></div>
                     <div style={{ display: 'flex', gap: 10 }}><span style={labelStyle}>Количество:</span><span style={valueStyle}>{product.quantity}</span></div>
                     <div style={{ display: 'flex', gap: 10 }}><span style={labelStyle}>Цена:</span><span style={valueStyle}>{product.price?.toLocaleString()} ₽</span></div>
@@ -490,7 +491,7 @@ const TkpViewPage = () => {
                   {product.sku && <div style={{ marginBottom: 16 }}><div style={sectionTitleStyle}>SKU</div><div style={{ display: 'flex', gap: 10 }}><span style={labelStyle}>Код:</span><span style={valueStyle}>{product.sku.code || '—'}</span></div>{product.sku.image && <img src={`data:image/png;base64,${product.sku.image}`} alt="SKU" style={{ maxWidth: 150, marginTop: 8, borderRadius: 8, border: '1px solid rgba(102,110,254,0.15)' }} />}</div>}
                   {product.images && product.images.length > 0 && <div style={{ marginBottom: 16 }}><div style={sectionTitleStyle}>Изображения</div><div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>{product.images.map((img, i) => <img key={i} src={`data:image/png;base64,${img}`} alt="" style={{ width: 150, height: 150, objectFit: 'contain', borderRadius: 8, border: '1px solid rgba(102,110,254,0.15)' }} />)}</div></div>}
                   {product.draws && product.draws.length > 0 && <div style={{ marginBottom: 16 }}><div style={sectionTitleStyle}>Чертежи</div><div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>{product.draws.map((draw, i) => <img key={i} src={`data:image/png;base64,${draw}`} alt="" style={{ width: 200, height: 150, objectFit: 'contain', borderRadius: 8, border: '1px solid rgba(102,110,254,0.15)' }} />)}</div></div>}
-                  {product.analogues && product.analogues.length > 0 && <div style={{ marginBottom: 16 }}><div style={sectionTitleStyle}>Аналоги</div>{product.analogues.map((analog, i) => <div key={i} style={{ display: 'flex', gap: 20, padding: '6px 0' }}><span style={valueStyle}>{analog.name}</span><span style={{ ...valueStyle, color: '#6B7280' }}>{analog.model}</span><span style={{ ...valueStyle, color: '#9CA3AF', fontSize: 12 }}>UID: {analog.uid}</span></div>)}</div>}
+                  {product.analogues && product.analogues.length > 0 && <div style={{ marginBottom: 16 }}><div style={sectionTitleStyle}>Аналоги</div>{product.analogues.map((analog, i) => <div key={i} style={{ display: 'flex', gap: 20, padding: '6px 0' }}><span style={valueStyle}>{analog.name}</span><span style={{ ...valueStyle, color: '#6B7280' }}>{analog.model}</span></div>)}</div>}
                 </div>
               ))
             )}

@@ -1,4 +1,4 @@
-// TkpPage.tsx (AWMS) — журнал ТКП с WebSocket (исправлен localhost)
+// TkpPage.tsx (AWMS) — журнал ТКП с номерами вместо UID
 import React, { useRef, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Client } from '@stomp/stompjs';
@@ -58,14 +58,13 @@ const TkpPage = () => {
   const VISIBLE_ROWS = 10;
 
   const COL_ICON = 30;
-  const COL_UID_TKP = 60;
-  const COL_UID_ORDER = 384;
-  const COL_NUMBER = 719;
-  const COL_CUSTOMER = 825;
-  const COL_COST = 1065;
-  const COL_DELIVERY = 1246;
-  const COL_PAYMENT = 1412;
-  const COL_STATUS = 1589;
+  const COL_NUMBER_TKP = 60;
+  const COL_NUMBER_ORDER = 384;
+  const COL_CUSTOMER = 719;
+  const COL_COST = 919;
+  const COL_DELIVERY = 1119;
+  const COL_PAYMENT = 1319;
+  const COL_STATUS = 1519;
 
   useEffect(() => {
     activeFilterRef.current = activeFilter;
@@ -370,9 +369,8 @@ const TkpPage = () => {
       <div style={{ position: 'absolute', top: 162, left: 40 }}>
         <div style={{ width: TABLE_WIDTH, height: TABLE_HEIGHT, backgroundColor: '#F5F6FA', borderRadius: 10, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
           <div style={{ height: HEADER_HEIGHT, minHeight: HEADER_HEIGHT, backgroundColor: '#666EFE', borderTopLeftRadius: 8, borderTopRightRadius: 8, display: 'flex', alignItems: 'center', position: 'relative', paddingRight: 40, boxSizing: 'border-box' }}>
-            <span style={{ fontFamily: 'Inter, sans-serif', fontSize: 15, fontWeight: 600, color: '#FFFFFF', position: 'absolute', left: COL_UID_TKP }}>UID ТКП</span>
-            <span style={{ fontFamily: 'Inter, sans-serif', fontSize: 15, fontWeight: 600, color: '#FFFFFF', position: 'absolute', left: COL_UID_ORDER }}>UID ЗАКАЗА</span>
-            <span style={{ fontFamily: 'Inter, sans-serif', fontSize: 15, fontWeight: 600, color: '#FFFFFF', position: 'absolute', left: COL_NUMBER }}>НОМЕР ТКП</span>
+            <span style={{ fontFamily: 'Inter, sans-serif', fontSize: 15, fontWeight: 600, color: '#FFFFFF', position: 'absolute', left: COL_NUMBER_TKP }}>НОМЕР ТКП</span>
+            <span style={{ fontFamily: 'Inter, sans-serif', fontSize: 15, fontWeight: 600, color: '#FFFFFF', position: 'absolute', left: COL_NUMBER_ORDER }}>НОМЕР ЗАКАЗА</span>
             <span style={{ fontFamily: 'Inter, sans-serif', fontSize: 15, fontWeight: 600, color: '#FFFFFF', position: 'absolute', left: COL_CUSTOMER }}>ЗАКАЗЧИК</span>
             <span style={{ fontFamily: 'Inter, sans-serif', fontSize: 15, fontWeight: 600, color: '#FFFFFF', position: 'absolute', left: COL_COST }}>СТОИМОСТЬ</span>
             <span style={{ fontFamily: 'Inter, sans-serif', fontSize: 15, fontWeight: 600, color: '#FFFFFF', position: 'absolute', left: COL_DELIVERY }}>ПОСТАВКА</span>
@@ -384,9 +382,8 @@ const TkpPage = () => {
               {tkpList.map((item, idx) => {
                 const isFirst = idx === 0;
                 const isLast = idx === tkpList.length - 1;
-                const tkpUidText = item.tkp_uid || '—';
-                const orderUidText = item.order_uid || '—';
-                const numberText = item.tkp_number || item.order_number || '—';
+                const tkpNumberText = item.tkp_number || item.order_number || '—';
+                const orderNumberText = item.order_number || '—';
                 const customerText = item.customer_id || '—';
                 const costText = item.total_cost ? `${Number(item.total_cost).toLocaleString()} ₽` : '—';
                 const deliveryText = formatDateTime(item.delivery_date);
@@ -402,19 +399,14 @@ const TkpPage = () => {
                     onMouseLeave={e => e.currentTarget.style.backgroundColor = '#FFFFFF'}>
                     <img src={Icon2Row} alt="" style={{ position: 'absolute', left: COL_ICON, width: 18, height: 22 }} />
                     <span
-                      onMouseEnter={(e) => handleCellMouseEnter(e, tkpUidText)}
+                      onMouseEnter={(e) => handleCellMouseEnter(e, tkpNumberText)}
                       onMouseLeave={handleCellMouseLeave}
-                      style={{ fontFamily: 'Inter, sans-serif', fontSize: 15, fontWeight: 400, color: '#2D4059', position: 'absolute', left: COL_UID_TKP, maxWidth: 274, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
-                    >{tkpUidText}</span>
+                      style={{ fontFamily: 'Inter, sans-serif', fontSize: 15, fontWeight: 400, color: '#2D4059', position: 'absolute', left: COL_NUMBER_TKP, maxWidth: COL_NUMBER_ORDER - COL_NUMBER_TKP - 20, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+                    >{tkpNumberText}</span>
                     <span
                       onClick={(e) => handleViewOrder(e, item.order_uid)}
-                      style={{ fontFamily: 'Inter, sans-serif', fontSize: 15, fontWeight: 400, color: '#666EFE', position: 'absolute', left: COL_UID_ORDER, maxWidth: COL_NUMBER - COL_UID_ORDER - 20, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', cursor: 'pointer', textDecoration: 'underline' }}
-                    >{orderUidText}</span>
-                    <span
-                      onMouseEnter={(e) => handleCellMouseEnter(e, numberText)}
-                      onMouseLeave={handleCellMouseLeave}
-                      style={{ fontFamily: 'Inter, sans-serif', fontSize: 15, fontWeight: 400, color: '#2D4059', position: 'absolute', left: COL_NUMBER, maxWidth: COL_CUSTOMER - COL_NUMBER - 10, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
-                    >{numberText}</span>
+                      style={{ fontFamily: 'Inter, sans-serif', fontSize: 15, fontWeight: 400, color: '#666EFE', position: 'absolute', left: COL_NUMBER_ORDER, maxWidth: COL_CUSTOMER - COL_NUMBER_ORDER - 20, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', cursor: 'pointer', textDecoration: 'underline' }}
+                    >{orderNumberText}</span>
                     <span style={{ fontFamily: 'Inter, sans-serif', fontSize: 15, fontWeight: 400, color: '#2D4059', position: 'absolute', left: COL_CUSTOMER, maxWidth: COL_COST - COL_CUSTOMER - 20, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{customerText}</span>
                     <span style={{ fontFamily: 'Inter, sans-serif', fontSize: 15, fontWeight: 600, color: '#2D4059', position: 'absolute', left: COL_COST }}>{costText}</span>
                     <span style={{ fontFamily: 'Inter, sans-serif', fontSize: 15, fontWeight: 400, color: '#2D4059', position: 'absolute', left: COL_DELIVERY }}>{deliveryText}</span>
@@ -425,7 +417,7 @@ const TkpPage = () => {
                       style={{
                         fontFamily: 'Inter, sans-serif', fontSize: 13, fontWeight: 500, color: statusColor,
                         position: 'absolute', left: COL_STATUS,
-                        maxWidth: 130, overflow: 'hidden',
+                        maxWidth: 180, overflow: 'hidden',
                         display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical',
                         lineHeight: '20px', maxHeight: 40,
                       } as React.CSSProperties}
