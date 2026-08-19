@@ -1,4 +1,4 @@
-// TkpViewPage.tsx — ПОЛНЫЙ ФАЙЛ (AWMS) с подпиской на /topic/tkp/paid и форматированием даты
+// TkpViewPage.tsx — ПОЛНЫЙ ФАЙЛ (AWMS) с попапом детализации по двойному клику
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTabs } from '../../context/TabContext';
@@ -90,6 +90,7 @@ const TkpViewPage = () => {
   const [buyerInfoCache, setBuyerInfoCache] = useState<Record<string, BuyerProductInfo>>({});
   const [tooltip, setTooltip] = useState<{ text: string; x: number; y: number } | null>(null);
   const tooltipTimer = useRef<NodeJS.Timeout | null>(null);
+  const [selectedProduct, setSelectedProduct] = useState<TkpProduct | null>(null);
 
   const COL_NUMBER = 50;
   const COL_NAME_ZADEL = 140;
@@ -222,6 +223,14 @@ const TkpViewPage = () => {
     if (productUid) {
       openTab(`/references/nomenclature/edit/${productUid}/0`, `Номенклатура AWMS`, null);
     }
+  };
+
+  const handleProductDoubleClick = (product: TkpProduct) => {
+    setSelectedProduct(product);
+  };
+
+  const handleCloseProduct = () => {
+    setSelectedProduct(null);
   };
 
   const handleCellMouseEnter = (e: React.MouseEvent, text: string) => {
@@ -414,7 +423,20 @@ const TkpViewPage = () => {
                     const isLastProduct = index === products.length - 1 && emptyRows === 0;
                     const isLast = index === totalRows - 1;
                     return (
-                      <div key={product.product_uid || index} style={{ height: ROW_HEIGHT, display: 'flex', alignItems: 'center', position: 'relative', borderBottom: isLast ? 'none' : '0.5px solid #E5ECF5' }}>
+                      <div 
+                        key={product.product_uid || index} 
+                        onDoubleClick={() => handleProductDoubleClick(product)}
+                        style={{ 
+                          height: ROW_HEIGHT, 
+                          display: 'flex', 
+                          alignItems: 'center', 
+                          position: 'relative', 
+                          borderBottom: isLast ? 'none' : '0.5px solid #E5ECF5',
+                          cursor: 'pointer'
+                        }}
+                        onMouseEnter={e => e.currentTarget.style.backgroundColor = '#F8F9FC'}
+                        onMouseLeave={e => e.currentTarget.style.backgroundColor = '#FFFFFF'}
+                      >
                         <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: '#FFFFFF' }} />
                         <span style={{ fontFamily: 'Inter, sans-serif', fontSize: 15, fontWeight: 400, color: '#2D4059', position: 'absolute', left: COL_NUMBER, zIndex: 1 }}>{index + 1}</span>
                         <span 
@@ -512,6 +534,85 @@ const TkpViewPage = () => {
       </div>
 
       {tooltip && <div style={{ position: 'fixed', left: tooltip.x, top: tooltip.y, transform: 'translateX(-50%)', backgroundColor: '#2D4059', color: '#FFFFFF', fontFamily: 'Inter, sans-serif', fontSize: 13, fontWeight: 500, padding: '6px 12px', borderRadius: 6, whiteSpace: 'nowrap', zIndex: 9999, pointerEvents: 'none', boxShadow: '0 2px 8px rgba(0,0,0,0.2)' }}>{tooltip.text}</div>}
+
+      {selectedProduct && (
+        <div onClick={handleCloseProduct} style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.3)', backdropFilter: 'blur(8px)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div onClick={e => e.stopPropagation()} style={{ width: 900, maxHeight: '80vh', backgroundColor: '#FFFFFF', borderRadius: 20, padding: 30, boxShadow: '0 8px 32px rgba(0,0,0,0.12)', overflowY: 'auto' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+              <h2 style={{ fontSize: 20, fontWeight: 600, color: '#2D4059', fontFamily: 'Inter, sans-serif' }}>{selectedProduct.product || '—'}</h2>
+              <button onClick={handleCloseProduct} style={{ width: 30, height: 30, borderRadius: 6, border: '1px solid rgba(102,110,254,0.15)', backgroundColor: '#FFFFFF', cursor: 'pointer', fontSize: 18, color: '#2D4059' }}>✕</button>
+            </div>
+            <div style={{ marginBottom: 20 }}>
+              <h3 style={sectionTitleStyle}>Основная информация</h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <div style={{ display: 'flex', gap: 10 }}><span style={labelStyle}>Наименование (AWMS):</span><span onClick={() => handleOpenBuyerMaterial(selectedProduct.product_uid)} style={{ ...valueStyle, color: '#666EFE', cursor: 'pointer', textDecoration: 'underline' }}>{buyerInfoCache[selectedProduct.product_uid]?.product || '—'}</span></div>
+                <div style={{ display: 'flex', gap: 10 }}><span style={labelStyle}>Артикул:</span><span style={valueStyle}>{selectedProduct.article || '—'}</span></div>
+                <div style={{ display: 'flex', gap: 10 }}><span style={labelStyle}>Количество:</span><span style={valueStyle}>{selectedProduct.quantity}</span></div>
+                <div style={{ display: 'flex', gap: 10 }}><span style={labelStyle}>Цена:</span><span style={valueStyle}>{selectedProduct.price?.toLocaleString()} ₽</span></div>
+                <div style={{ display: 'flex', gap: 10 }}><span style={labelStyle}>Стоимость:</span><span style={valueStyle}>{selectedProduct.cost?.toLocaleString()} ₽</span></div>
+                {selectedProduct.group && <div style={{ display: 'flex', gap: 10 }}><span style={labelStyle}>Группа:</span><span style={valueStyle}>{selectedProduct.group}</span></div>}
+                {selectedProduct.type && <div style={{ display: 'flex', gap: 10 }}><span style={labelStyle}>Вид:</span><span style={valueStyle}>{selectedProduct.type}</span></div>}
+                {selectedProduct.manufacturer && <div style={{ display: 'flex', gap: 10 }}><span style={labelStyle}>Производитель:</span><span style={valueStyle}>{selectedProduct.manufacturer}</span></div>}
+                {selectedProduct.country && <div style={{ display: 'flex', gap: 10 }}><span style={labelStyle}>Страна:</span><span style={valueStyle}>{selectedProduct.country}</span></div>}
+                {selectedProduct.brand && <div style={{ display: 'flex', gap: 10 }}><span style={labelStyle}>Бренд:</span><span style={valueStyle}>{selectedProduct.brand}</span></div>}
+                {selectedProduct.model && <div style={{ display: 'flex', gap: 10 }}><span style={labelStyle}>Модель:</span><span style={valueStyle}>{selectedProduct.model}</span></div>}
+                {selectedProduct.description && <div style={{ display: 'flex', gap: 10 }}><span style={labelStyle}>Описание:</span><span style={{ ...valueStyle, maxWidth: 600 }}>{selectedProduct.description}</span></div>}
+              </div>
+            </div>
+            {selectedProduct.specifications && selectedProduct.specifications.length > 0 && (
+              <div style={{ marginBottom: 20 }}>
+                <h3 style={sectionTitleStyle}>Характеристики</h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  {selectedProduct.specifications.map((spec, i) => (
+                    <div key={i} style={{ display: 'flex', gap: 10 }}><span style={labelStyle}>{spec.characteristic}:</span><span style={valueStyle}>{spec.value} {spec.unit}</span></div>
+                  ))}
+                </div>
+              </div>
+            )}
+            {selectedProduct.barcode && (
+              <div style={{ marginBottom: 20 }}>
+                <h3 style={sectionTitleStyle}>Штрихкод</h3>
+                <div style={{ display: 'flex', gap: 10 }}><span style={labelStyle}>Код:</span><span style={valueStyle}>{selectedProduct.barcode.code || '—'}</span></div>
+                {selectedProduct.barcode.codeimage && <img src={`data:image/png;base64,${selectedProduct.barcode.codeimage}`} alt="Штрихкод" style={{ maxWidth: 300, marginTop: 8, borderRadius: 8, border: '1px solid rgba(102,110,254,0.15)' }} />}
+              </div>
+            )}
+            {selectedProduct.sku && (
+              <div style={{ marginBottom: 20 }}>
+                <h3 style={sectionTitleStyle}>SKU</h3>
+                <div style={{ display: 'flex', gap: 10 }}><span style={labelStyle}>Код:</span><span style={valueStyle}>{selectedProduct.sku.code || '—'}</span></div>
+                {selectedProduct.sku.image && <img src={`data:image/png;base64,${selectedProduct.sku.image}`} alt="SKU" style={{ maxWidth: 150, marginTop: 8, borderRadius: 8, border: '1px solid rgba(102,110,254,0.15)' }} />}
+              </div>
+            )}
+            {selectedProduct.images && selectedProduct.images.length > 0 && (
+              <div style={{ marginBottom: 20 }}>
+                <h3 style={sectionTitleStyle}>Изображения</h3>
+                <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                  {selectedProduct.images.map((img, i) => <img key={i} src={`data:image/png;base64,${img}`} alt="" style={{ width: 150, height: 150, objectFit: 'contain', borderRadius: 8, border: '1px solid rgba(102,110,254,0.15)' }} />)}
+                </div>
+              </div>
+            )}
+            {selectedProduct.draws && selectedProduct.draws.length > 0 && (
+              <div style={{ marginBottom: 20 }}>
+                <h3 style={sectionTitleStyle}>Чертежи</h3>
+                <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                  {selectedProduct.draws.map((draw, i) => <img key={i} src={`data:image/png;base64,${draw}`} alt="" style={{ width: 200, height: 150, objectFit: 'contain', borderRadius: 8, border: '1px solid rgba(102,110,254,0.15)' }} />)}
+                </div>
+              </div>
+            )}
+            {selectedProduct.analogues && selectedProduct.analogues.length > 0 && (
+              <div style={{ marginBottom: 20 }}>
+                <h3 style={sectionTitleStyle}>Аналоги</h3>
+                {selectedProduct.analogues.map((analog, i) => (
+                  <div key={i} style={{ display: 'flex', gap: 20, padding: '6px 0' }}>
+                    <span style={valueStyle}>{analog.name}</span>
+                    <span style={{ ...valueStyle, color: '#6B7280' }}>{analog.model}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
